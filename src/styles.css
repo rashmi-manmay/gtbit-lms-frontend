@@ -1,0 +1,29 @@
+html, body, #root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f5f7fb;
+  font-family: Roboto, Arial, sans-serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+.page-shell {
+  min-height: 100vh;
+}
+
+.auth-card {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.status-pending { color: #ed6c02; font-weight: 600; }
+.status-approved { color: #2e7d32; font-weight: 600; }
+.status-rejected { color: #d32f2f; font-weight: 600; }
