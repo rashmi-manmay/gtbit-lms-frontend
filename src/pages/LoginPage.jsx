@@ -9,11 +9,12 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { apiRequest } from "../api.js";
 
 export default function LoginPage({ onLoggedIn }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +27,18 @@ export default function LoginPage({ onLoggedIn }) {
   const [forgotMessage, setForgotMessage] = useState("");
   const [forgotError, setForgotError] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+const selectedRole = (location.state?.selectedRole || "").toLowerCase();
+console.log("SELECTED ROLE:", location.state?.selectedRole);
+const roleName =
+  selectedRole === "hod"
+    ? "HOD"
+    : selectedRole === "teacher"
+    ? "Teacher"
+    : selectedRole === "admin"
+    ? "Admin"
+    : selectedRole === "labassistant"
+    ? "Lab Staff"
+    : "";
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -248,7 +261,19 @@ export default function LoginPage({ onLoggedIn }) {
               >
                 Enter your registered email address.
               </Typography>
-
+		{roleName && (
+  <Typography
+    align="center"
+    sx={{
+      mb: 3,
+      fontSize: "20px",
+      fontWeight: 700,
+      color: "#1976d2"
+    }}
+  >
+    Login as {roleName}
+  </Typography>
+)}
               {forgotError && (
                 <Alert
                   severity="error"
