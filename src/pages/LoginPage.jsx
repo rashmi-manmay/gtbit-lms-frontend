@@ -27,18 +27,30 @@ export default function LoginPage({ onLoggedIn }) {
   const [forgotMessage, setForgotMessage] = useState("");
   const [forgotError, setForgotError] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
-const selectedRole = (location.state?.selectedRole || "").toLowerCase();
-console.log("SELECTED ROLE:", location.state?.selectedRole);
-const roleName =
-  selectedRole === "hod"
-    ? "HOD"
-    : selectedRole === "teacher"
-    ? "Teacher"
-    : selectedRole === "admin"
-    ? "Admin"
-    : selectedRole === "labassistant"
-    ? "Lab Staff"
-    : "";
+
+  /* ================= SELECTED LOGIN ROLE ================= */
+
+  const selectedRole =
+    (
+      location.state?.selectedRole ||
+      localStorage.getItem("selectedRole") ||
+      ""
+    ).toLowerCase();
+
+  const roleNames = {
+    hod: "HOD",
+    teacher: "Teacher",
+    admin: "Admin",
+    labassistant: "Lab Staff",
+    "lab assistant": "Lab Staff",
+    labstaff: "Lab Staff",
+    "lab staff": "Lab Staff"
+  };
+
+  const selectedRoleName =
+    roleNames[selectedRole] || "";
+
+  /* ================= LOGIN ================= */
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -60,36 +72,72 @@ const roleName =
         })
       });
 
-      localStorage.setItem("token", data.token || "");
+      /* ================= ROLE CHECK ================= */
+
+      const actualRole = (
+        data.role || ""
+      ).toLowerCase();
+
+      const actualRoleName =
+        roleNames[actualRole] || data.role || "this account";
+
+      if (
+        selectedRole &&
+        actualRole !== selectedRole
+      ) {
+        setError(
+          `These credentials belong to ${actualRoleName}. Please use the ${actualRoleName} login option.`
+        );
+
+        return;
+      }
+
+      /* ================= SAVE LOGIN ================= */
+
+      localStorage.setItem(
+        "token",
+        data.token || ""
+      );
+
       localStorage.setItem(
         "email",
         data.email || email.trim().toLowerCase()
       );
-      localStorage.setItem("name", data.name || "");
+
+      localStorage.setItem(
+        "name",
+        data.name || ""
+      );
+
       localStorage.setItem(
         "designation",
         data.designation || ""
       );
+
       localStorage.setItem(
         "role",
-        (data.role || "teacher").toLowerCase()
+        actualRole || "teacher"
       );
 
       onLoggedIn?.();
 
       navigate(
-        (data.role || "").toLowerCase() === "hod"
+        actualRole === "hod"
           ? "/hod"
           : "/home",
         { replace: true }
       );
 
     } catch (err) {
-      setError(err.message);
+      setError(
+        err.message || "Login failed."
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  /* ================= FORGOT PASSWORD ================= */
 
   const handleForgotPassword = async e => {
     e.preventDefault();
@@ -98,26 +146,36 @@ const roleName =
     setForgotMessage("");
 
     if (!forgotEmail.trim()) {
-      setForgotError("Please enter your email address.");
+      setForgotError(
+        "Please enter your email address."
+      );
       return;
     }
 
     try {
       setForgotLoading(true);
 
-      await apiRequest("/api/forgot-password", {
-        method: "POST",
-        body: JSON.stringify({
-          email: forgotEmail.trim().toLowerCase()
-        })
-      });
+      await apiRequest(
+        "/api/forgot-password",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            email: forgotEmail
+              .trim()
+              .toLowerCase()
+          })
+        }
+      );
 
       setForgotMessage(
         "If this email is registered, a password reset link has been sent."
       );
 
     } catch (err) {
-      setForgotError(err.message);
+      setForgotError(
+        err.message ||
+        "Failed to process request."
+      );
     } finally {
       setForgotLoading(false);
     }
@@ -132,7 +190,10 @@ const roleName =
         p: 2
       }}
     >
-      <Card className="auth-card" elevation={5}>
+      <Card
+        className="auth-card"
+        elevation={5}
+      >
         <CardContent sx={{ p: 4 }}>
 
           {/* ================= LOGIN ================= */}
@@ -151,13 +212,32 @@ const roleName =
               <Typography
                 align="center"
                 color="text.secondary"
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
               >
                 Leave Management System
               </Typography>
 
+              {/* ================= SELECTED ROLE ================= */}
+
+              {selectedRoleName && (
+                <Typography
+                  align="center"
+                  sx={{
+                    mb: 3,
+                    fontSize: "21px",
+                    fontWeight: 700,
+                    color: "#1976d2"
+                  }}
+                >
+                  Login as {selectedRoleName}
+                </Typography>
+              )}
+
               {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert
+                  severity="error"
+                  sx={{ mb: 2 }}
+                >
                   {error}
                 </Alert>
               )}
@@ -254,6 +334,20 @@ const roleName =
                 Forgot Password
               </Typography>
 
+              {selectedRoleName && (
+                <Typography
+                  align="center"
+                  sx={{
+                    mb: 2,
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "#1976d2"
+                  }}
+                >
+                  Login as {selectedRoleName}
+                </Typography>
+              )}
+
               <Typography
                 align="center"
                 color="text.secondary"
@@ -261,19 +355,7 @@ const roleName =
               >
                 Enter your registered email address.
               </Typography>
-		{roleName && (
-  <Typography
-    align="center"
-    sx={{
-      mb: 3,
-      fontSize: "20px",
-      fontWeight: 700,
-      color: "#1976d2"
-    }}
-  >
-    Login as {roleName}
-  </Typography>
-)}
+
               {forgotError && (
                 <Alert
                   severity="error"
